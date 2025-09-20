@@ -1,17 +1,20 @@
-name: Build JAR
+name: Publish Java Package with Maven
 
 on:
   push:
-    branches: [ "**" ]
-  pull_request:
-    branches: [ "**" ]
+    branches:
+      - main
+      - master
+  release:
+    types: [created]
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -21,10 +24,17 @@ jobs:
           java-version: '17'
 
       - name: Build with Maven
-        run: mvn clean package
+        run: mvn -B package --file pom.xml
 
-      - name: Upload JAR Artifact
+      # 可选：将 jar 作为 workflow 产物上传（供下载）
+      - name: Upload jar artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Metal-Mod-jar
+          name: metal-mod-jar
           path: target/*.jar
+
+      # 可选：发布到 Maven Central 或 GitHub Packages，请取消注释并配置凭证
+      # - name: Publish to GitHub Packages
+      #   run: mvn deploy -B -DskipTests --file pom.xml
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 或其它Maven仓库的token
