@@ -1,41 +1,42 @@
 name: Publish Java Package with Maven
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
-      - master
-  release:
-    types: [created]
+    branches: [ main ]          # 也可改成 master 或任意分支
+  workflow_dispatch:            # 允许手动触发
 
 jobs:
-  build:
-
+  publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write           # 写入 GitHub Packages 的权限
 
     steps:
+      # 1. 检出源码
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. 设置 JDK
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
           java-version: '17'
+          distribution: 'temurin'
 
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
-
-      # 可选：将 jar 作为 workflow 产物上传（供下载）
-      - name: Upload jar artifact
-        uses: actions/upload-artifact@v4
+      # 3. 配置 Maven settings.xml（认证 GitHub Packages）
+      - name: Configure Maven
+        uses: actions/setup-java@v4
         with:
-          name: metal-mod-jar
-          path: target/*.jar
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: github
+          server-username: GITHUB_USER_REF
+          server-password: GITHUB_TOKEN_REF
 
-      # 可选：发布到 Maven Central 或 GitHub Packages，请取消注释并配置凭证
-      # - name: Publish to GitHub Packages
-      #   run: mvn deploy -B -DskipTests --file pom.xml
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 或其它Maven仓库的token
+      # 4. 编译、测试、打包并发布
+      - name: Publish to GitHub Packages
+        run: mvn --batch-mode clean deploy
+        env:
+          GITHUB_USER_REF: ${{ github.actor }}
+          GITHUB_TOKEN_REF: ${{ secrets.GITHUB_TOKEN }}
