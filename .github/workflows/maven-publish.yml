@@ -1,6 +1,7 @@
 name: Publish Java Package with Maven
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
