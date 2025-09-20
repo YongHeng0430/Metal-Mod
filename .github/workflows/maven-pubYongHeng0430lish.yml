@@ -1,0 +1,31 @@
+name: Build JAR with Maven
+
+on:
+  workflow_dispatch:   # 手动触发
+  push:
+    branches: [ main ] # 也可以在推送时自动触发
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17   # 你项目里用的 Java 版本，可以改成 8/11/21 等
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Metal-Mod-jar
+          path: target/*.jar
